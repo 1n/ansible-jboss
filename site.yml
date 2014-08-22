@@ -1,0 +1,7 @@
+---
+- hosts: jboss-hosts
+  user: vagrant
+  sudo: yes
+
+  roles:
+    - jboss

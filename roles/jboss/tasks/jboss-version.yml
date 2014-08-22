@@ -1,0 +1,3 @@
+---
+- name: Get JBoss version
+  action: get_jboss_version

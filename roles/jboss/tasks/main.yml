@@ -1,0 +1,65 @@
+---
+- name: Install unzip and libselinux-python
+  yum: name={{item}} state=present
+  with_items:
+    - unzip
+    - libselinux-python
+  tags:
+    - deps
+
+- name: Download JBoss
+  get_url: url=http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.zipX dest=/opt/jboss-as-7.1.1.Final.zip
+  ignore_errors: True
+  register: online_source
+
+- name: Copy from local and unzip JBoss archive
+  unarchive: src=jboss-as-7.1.1.Final.zip dest=/opt
+  when: online_source|failed
+  tags:
+    - jboss
+
+- name: Create link to JBoss directory
+  command: ln -sf /opt/jboss-as-7.1.1.Final /opt/jboss-as
+  tags:
+    - jboss
+
+- name: Add group "jboss-as"
+  group: name=jboss-as
+  tags:
+    - jboss
+
+- name: Add user "jboss-as"
+  user: name=jboss-as group=jboss-as home=/opt/jboss-as
+  tags:
+    - jboss
+
+- name: Change ownership of JBoss installation
+  file: path=/opt/jboss-as owner=jboss-as group=jboss-as state=directory recurse=yes
+  tags:
+    - jboss
+
+- name: Copy JBoss init script to init.d
+  copy: src=jboss-as-standalone.sh dest=/etc/init.d/jboss-as mode=0755
+  tags:
+    - jboss-service
+
+- name: Copy JBoss config
+  copy: src=jboss-as.conf dest=/etc/jboss-as/ owner=jboss-as group=jboss-as
+  tags:
+    - jboss-service
+  notify:
+    - Restart jboss
+
+- name: Add JBoss to start as a service at boot
+  service: name=jboss-as enabled=yes
+  tags:
+    - jboss-service
+
+- name: Start JBoss service
+  service: name=jboss-as state=started
+  tags:
+    - jboss-service
+
+- include: jboss-version.yml
+  tags:
+    - version
