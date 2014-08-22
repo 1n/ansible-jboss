@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+import json
+import commands
+
+out = commands.getstatusoutput("sudo /opt/jboss-as/bin/standalone.sh --version | tail -n 1")
+
+print json.dumps({
+    "JBoss version" : out[1]
+})
